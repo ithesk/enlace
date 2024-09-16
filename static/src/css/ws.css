@@ -1,0 +1,143 @@
+/* Estilo para la sección de consulta */
+.container {
+    max-width: 900px;
+    margin: auto;
+    padding: 30px;
+    font-family: 'Poppins', sans-serif;
+}
+
+h1, h2 {
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 30px;
+}
+
+.input-group {
+    display: flex;
+    align-items: center;
+}
+
+.input-group-prepend {
+    background-color: #f1f1f1;
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+}
+
+.input-group-text {
+    border: none;
+    padding: 15px;
+    font-weight: bold;
+}
+
+input.form-control {
+    height: 50px;
+    font-size: 1.1rem;
+    border-radius: 0 8px 8px 0;
+    border: 1px solid #d1d1d1;
+    padding: 15px;
+}
+
+button.btn-primary {
+    width: 100%;
+    padding: 12px;
+    font-size: 1.2rem;
+    background-color: #007bff;
+    border-color: #007bff;
+    border-radius: 10px;
+    margin-top: 15px;
+    transition: background-color 0.3s ease;
+}
+
+button.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+/* Estilo para los resultados */
+.card {
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+    background-color: #fff;
+}
+
+.card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.badge-success {
+    background-color: #28a745;
+    color: white;
+    font-size: 1rem;
+    padding: 8px 12px;
+    border-radius: 8px;
+}
+
+.badge-danger {
+    background-color: #dc3545;
+    color: white;
+    font-size: 1rem;
+    padding: 8px 12px;
+    border-radius: 8px;
+}
+
+.warranty-details {
+    margin-top: 15px;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.exclusions ul {
+    padding-left: 20px;
+}
+
+.exclusions li {
+    list-style-type: none;
+    padding: 5px 0;
+    font-size: 0.85rem;
+}
+
+.exclusions li:before {
+    content: "❌ ";
+    color: #dc3545;
+    margin-right: 8px;
+}
+
+/* Asegurarse de que todo esté centrado y con buen espaciado */
+.text-center {
+    text-align: center;
+}
+
+.mb-4 {
+    margin-bottom: 1.5rem;
+}
+
+.my-5 {
+    margin-top: 3rem;
+    margin-bottom: 3rem;
+}
+
+
+.custom-repair-button {
+    color: #6c757d; /* Cambiar el color del texto a gris */
+    border-color: #6c757d; /* Cambiar el color del borde a gris */
+    background-color: transparent; /* Fondo transparente */
+    padding: 10px 20px; /* Ajuste del padding */
+    font-size: 16px; /* Ajustar el tamaño de la fuente */
+}
+
+.custom-repair-button:hover {
+    color: #495057; /* Cambiar el color del texto cuando se pasa el mouse */
+    border-color: #495057; /* Cambiar el borde al pasar el mouse */
+}
+
+.custom-repair-button:active {
+    background-color: #f8f9fa; /* Color de fondo cuando el botón está activo */
+    color: #495057; /* Color del texto cuando el botón está activo */
+}
