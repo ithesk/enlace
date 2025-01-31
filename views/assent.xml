@@ -7,6 +7,7 @@
             <script type="text/javascript" src="/enlace/static/src/js/button.js"></script>
             <script type="text/javascript" src="/enlace/static/src/js/assint.js"></script>
             <script type="text/javascript" src="/enlace/static/src/js/state.js"></script>
+            <script type="text/javascript" src="/enlace/static/src/js/pos_repair_state_validation.js"></script>
             <link rel="stylesheet" type="text/css" href="/enlace/static/src/css/boton_w.css"/>
         </xpath>
     </template>

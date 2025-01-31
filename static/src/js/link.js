@@ -122,29 +122,81 @@ odoo.define('pos_repair_link.popup_repair_number', function (require) {
                 if (result && result.success) {
                     var product_name = result.product_name;
                     var repair_number = result.repair_number;
+                    var partner_id_repair = result.partner_id_repair ;
+                    var partner_phone_repair = result.partner_phone_repair;
                     console.log('Número de reparación:', repair_number);
                     console.log('Nombre del producto:', product_name);
-                    var linkRepairButton = document.getElementById('link_repair_button');
-                    linkRepairButton.textContent = "Reparación vinculada: " + repair_number + " - " + product_name;
+                    console.log('nombre de cliente:', partner_id_repair )
+                    console.log('telefono de cliente:', partner_phone_repair)
                     var message = result.message;
-
+                    
                     //obtener la orden actual
                     var current_order = this.pos.get_order();
+                    var matching_clients = [];
 
-                    //agregar la reparación a la orden
-                    current_order.set_repair_number({
-                        repair_number: repair_number,
-                        product_name: product_name,
-                    });
+                    // Verificar si 'partner_by_phone' existe antes de intentar acceder a él
+                    if (this.pos.db.partner_by_phone && partner_phone_repair) {
+                        matching_clients = this.pos.db.partner_by_phone[partner_phone_repair] || [];
+                    }
+        
+                    // Si no hay clientes encontrados por teléfono, buscar por nombre
+                    if (matching_clients.length === 0) {
+                        matching_clients = this.pos.db.search_partner(partner_id_repair);
+                        console.log('Clientes encontrados por nombre:', matching_clients);
+                    }
+        
+                    if (matching_clients && matching_clients.length > 0) {
+                        // Si se encuentran coincidencias, tomamos el primer cliente
+                        var client = matching_clients[0];
+                        console.log('Cliente encontrado:', client);
+        
+                        // Obtener la orden actual
+                        var current_order = this.pos.get_order();
+        
+                        // Cambiar el cliente de la orden actual
+                         current_order.set_client(client);
+        
+                        // Agregar la reparación a la orden
+                        
+
+                        current_order.set_repair_number({
+                            repair_number: repair_number,
+                            product_name: product_name,
+                            
+                            
+                        });
+        
+                        console.log('Cliente cambiado en la orden actual:', current_order.get_client());
+                        var linkRepairButton = document.getElementById('link_repair_button');
+                        linkRepairButton.textContent = "Reparación vinculada: " + repair_number + " - " + product_name;
+        
+                        console.log('Reparación vinculada correctamente.');
+                    }
+                    else {
+
+                        console.log('No se encontró ningún cliente con el teléfono o nombre :', partner_phone_repair);
+                        var client_id = 7;
+                        var client = this.pos.db.get_partner_by_id(client_id);
+                        console.log('Cliente por defecto:', client);
+                        
+                        current_order.set_client(client);
+                        current_order.set_repair_number({
+                            repair_number: repair_number,
+                            product_name: product_name,
+                            
+                            
+                            
+                        });
+        
+                        
+                        var linkRepairButton = document.getElementById('link_repair_button');
+                        linkRepairButton.textContent = "Reparación vinculada: " + repair_number + " - " + product_name;
+
+                   
                     
-                    console.log('Valores agregados a la orden actual:', current_order.get_repair_number());
-
                     
-
-                    console.log(message);
-                    console.log('Reparación vinculada correctamente.');
-
-                    console.log(this.pos.get_order());
+                    
+                }
 
                 } else if (result.message && result.message === "Orden de reparación no encontrada en Odoo 16") {
                     // Si el resultado indica que la reparación no fue encontrada, mostrar un popup
@@ -171,6 +223,7 @@ odoo.define('pos_repair_link.popup_repair_number', function (require) {
                     linkRepairButton.textContent = "Vincular reparación"; 
                 }
             });
+            
         }
     });
 

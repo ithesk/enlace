@@ -39,7 +39,7 @@ odoo.define('pos_repair_link.order_listener', function (require) {
         console.log('Nombre de la orden:', order_name);
 
     // Espera de 3 segundos antes de ejecutar rpc.query
-    setTimeout(function() {
+    
         rpc.query({
             route: '/pos/link_save',
             params: {
@@ -75,7 +75,7 @@ odoo.define('pos_repair_link.order_listener', function (require) {
                 console.log('Nuevo pedido creado, restableciendo reparación vinculada.');
             }
         });
-    }, 7000); // 3000 milisegundos = 3 segundos
+      // 3000 milisegundos = 3 segundos
 };
 
     // Escuchar el cambio de la orden seleccionada y agregar el listener
@@ -86,4 +86,8 @@ odoo.define('pos_repair_link.order_listener', function (require) {
             add_order_listener(this.pos);
         }
     });
+    return {
+        add_order_listener: add_order_listener,
+        saveRepairData: saveRepairData
+    };
 });

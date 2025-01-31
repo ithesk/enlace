@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template_682" xml:space="preserve">
+    <!-- Template para el popup de detalles de reparación -->
+    <t t-name="RepairDetailsPopup">
+        <div class="modal-dialog">
+            <div class="popup repair-details">
+                <p class="title"><t t-esc="widget.options.title || ''" /></p>
+                <div class="repair-details-content">
+                    <!-- El contenido se llenará dinámicamente -->
+                </div>
+                <div class="footer">
+                    <div class="button confirm">
+                        Ok
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+
+    <!-- Template para el contenido de los detalles -->
+    <t t-name="RepairDetailsContent">
+        <div class="repair-info">
+            <p class="state-message"><t t-esc="state_message"/></p>
+            <div class="repair-data">
+                <p><strong>Número de reparación:</strong> <t t-esc="repair.name"/></p>
+                <p><strong>Estado actual:</strong> <t t-esc="repair.state"/></p>
+                <p><strong>Producto:</strong> <t t-esc="repair.product_id[1]"/></p>
+                <p><strong>Fecha estimada:</strong> <t t-esc="repair.scheduled_date"/></p>
+            </div>
+        </div>
+    </t>
+</templates>

@@ -19,6 +19,8 @@
     'qweb': [
         'static/src/xml/pos.xml',
         'static/src/xml/delivery.xml',
+        'static/src/xml/popus.xml',
+
     ],
     "test": [],
     'installable': True,

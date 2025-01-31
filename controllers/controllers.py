@@ -14,7 +14,7 @@ class RepairLinkController(http.Controller):
     @http.route('/pos/link_repair', type='json', auth='user')
     def link_repair(self, repair_number, order_name):
         # Conexión a Odoo 16 usando la API externa
-        url = 'http://192.168.2.145:8078'
+        url = 'http://192.168.2.229:8078'
         db = 'itheskrestore'
         username = 'api_consulta@ithesk.com'
         password = 'Api1234567'
@@ -29,12 +29,16 @@ class RepairLinkController(http.Controller):
         models = xmlrpc.client.ServerProxy('{}/xmlrpc/2/object'.format(url))
 
         # Buscar la orden de reparación en Odoo 16
-        repair_order = models.execute_kw(db, uid, password, 'repair.order', 'search_read', [[('name', '=', repair_number)]], {'fields': ['id', 'name', 'product_id']})        
+        repair_order = models.execute_kw(db, uid, password, 'repair.order', 'search_read', [[('name', '=', repair_number)]], {'fields': ['id', 'name', 'product_id','partner_id','partner1_phone']})        
         
 
         if repair_order:
             product_name = repair_order[0]['product_id'][1]
             print(product_name)
+            partner_id_repair = repair_order[0]['partner_id'][1]
+            partner_phone_repair = repair_order[0]['partner1_phone']
+            _logger.info("Resultado de el cliente: %s", partner_id_repair )
+            _logger.info("Resultado de el telefono: %s", partner_phone_repair )
             
 
             # Obtener la orden de PoS actual en Odoo 12
@@ -53,7 +57,9 @@ class RepairLinkController(http.Controller):
                     'success': True, 
                     'message': 'Orden de reparación encontrada y almacenada temporalmente en Odoo 12',
                     'repair_number': repair_number,
-                    'product_name': product_name
+                    'product_name': product_name,
+                    'partner_id_repair': partner_id_repair,
+                    'partner_phone_repair': partner_phone_repair
                 }
                 
                 
@@ -62,7 +68,9 @@ class RepairLinkController(http.Controller):
                     'success': True, 
                     'message': 'Orden de reparación temporalmente almacenada en Odoo 12',
                     'repair_number': repair_number,
-                    'product_name': product_name
+                    'product_name': product_name,
+                    'partner_id_repair': partner_id_repair,
+                    'partner_phone_repair': partner_phone_repair
                     }
         else:
             return {'success': False, 'message': 'Orden de reparación no encontrada en Odoo 16'}
@@ -70,41 +78,27 @@ class RepairLinkController(http.Controller):
 
     @http.route('/pos/link_save', type='json', auth='user')
     def link_save(self, repair_number, product_name, order_name, ncf_order, **kwargs):
-        """
-        Guarda los datos de la reparación en el modelo pos.order.
-        """
         try:
-            # Buscar la orden de POS por nombre
-            print("Order Name (pos_reference) enviado:", order_name)
-            pos_order = http.request.env['pos.order'].search([('ncf', '=', ncf_order)])
-            _logger.info("Resultado de la búsqueda22: %s", pos_order)
+            _logger.info("Buscando orden con NCF: %s", ncf_order)
+            pos_order = http.request.env['pos.order'].search([
+                ('ncf', '=', ncf_order),
+                ('pos_reference', '=', order_name)  # Añadido filtro adicional
+            ], limit=1)  # Limitado a 1 resultado
             
-            if pos_order:
-                # Actualizar los datos de reparación en la orden de POS
-                pos_order.write({
-                    'repair_number': repair_number,
-                    'product_name': product_name,
-                })
+            if not pos_order:
+                return {'success': False, 'message': 'Orden no encontrada'}
 
-                # _logger.info("llamando a la funcion de onchange")
-                # pos_order._onchange_repair_fields()
-                pos_order._onchange_repair_fields()
-                _logger.info(f"_onchange_repair_fields ejecutado para pos.order con ID {pos_order.id}")
-                return {
-                    'success': True,
-                    'message': 'Datos de reparación guardados correctamente en POS Order.',
-                    'pos_order_id': pos_order.id,
-                }
-
-            else:
-                return {
-                    'success': False,
-                    'message': 'No se encontró ninguna orden de POS con ese nombre.'
-                }
+            pos_order.write({
+                'repair_number': repair_number,
+                'product_name': product_name,
+            })
+            pos_order._onchange_repair_fields()
             
-           
-        except Exception as e:
             return {
-                'success': False,
-                'message': str(e)
+                'success': True,
+                'message': 'Guardado exitoso',
+                'pos_order_id': pos_order.id
             }
+        except Exception as e:
+            _logger.error("Error: %s", str(e))
+            return {'success': False, 'message': str(e)}

@@ -26,7 +26,7 @@ class PosOrder(models.Model):
             repair_data = repair_link_controller.temp_links.pop(self.pos_reference)
             # Enlazamos la orden de PoS con la reparación
             self.write({'repair_order_id': repair_data['repair_order_id']})
-            _logger.info(f"Orden de PoS {self.pos_reference} enlazada con la reparación {repair_data['repair_number']}")
+            print(f"Orden de PoS {self.pos_reference} enlazada con la reparación {repair_data['repair_number']}")
 
         return res
     
@@ -132,87 +132,40 @@ class PosOrder(models.Model):
     
 
     @api.model
-    def onchanger_repair_state(self, number):
+    def onchanger_repair_state(self,number):
         """
-        Verifica y actualiza el estado de la orden de reparación.
+        Cuando se cambia el estado de la orden de reparación en Odoo 16, se actualiza el estado de la orden de reparación en Odoo 12.
         """
         _logger.info(f"onchanger_repair_state: {number}")
         models, uid, db, password = self._get_odoo16_connection()
 
-        try:
-            # Mapeo de estados con íconos
-            estados = {
-                'draft': ('📝', 'Cotización'),
-                'confirmed': ('✔️', 'Confirmado'),
-                'under_repair': ('🔧', 'En Reparación'),
-                'ready': ('🔨', 'Listo para Reparar'),
-                '2binvoiced': ('💰', 'Para ser Facturado'),
-                'done': ('✅', 'Reparado'),
-                'handover': ('📦', 'Entregado'),
-                'cancel': ('❌', 'Cancelado'),
-                'guarantee': ('🔄', 'Garantía')
+        # Buscar la reparación en Odoo 16 con el número de reparación y nombre
+        repair_order_ids = models.execute_kw(db, uid, password, 'repair.order', 'search', [[('name', '=', number)]], {'limit': 1})
+        _logger.info(f"La búsqueda de la reparación 2: {repair_order_ids}")
+        if not repair_order_ids:
+            _logger.error(f"No se encontró ninguna orden de reparación con el número: {number}")
+            return
+
+        repair_order_id = repair_order_ids[0]
+
+        # Leer el estado actual de la orden de reparación en Odoo 16
+        repair_order = models.execute_kw(db, uid, password, 'repair.order', 'read', [repair_order_id], {'fields': ['state']})
+        _logger.info(f"Estado de la orden de reparación en Odoo 16: {repair_order[0]['state']}")
+        current_state = repair_order[0]['state']
+
+        if current_state == 'done':
+            # Actualizar el estado de la orden de reparación en Odoo 16 a 'handover'
+            models.execute_kw(db, uid, password, 'repair.order', 'write', [[repair_order_id], {'state': 'handover'}])
+            _logger.info(f"Estado de la orden de reparación actualizado a Entregado en Axe: {number}")
+            return {
+                'status': 'success',
+                'message': f"Estado de la orden de reparación actualizado a Entregado en Axe: {number}"
             }
-
-            # Buscar la reparación
-            repair_order_ids = models.execute_kw(db, uid, password, 'repair.order', 'search', 
-                [[('name', '=', number)]], {'limit': 1})
-
-            if not repair_order_ids:
-                return {
-                    'status': 'error',
-                    'message': f"⚠️ No se encontró la orden de reparación {number}"
-                }
-
-            repair_order_id = repair_order_ids[0]
-
-            # Leer información de la reparación
-            repair_order = models.execute_kw(db, uid, password, 'repair.order', 'read', 
-                [repair_order_id], {
-                    'fields': [
-                        'state',
-                        'user_id',
-                        'internal_notes'
-                    ]
-                })
-            
-            current_state = repair_order[0]['state']
-            
-            # Obtener nombre del técnico
-            user_info = "No asignado"
-            if repair_order[0].get('user_id'):
-                user_data = models.execute_kw(db, uid, password, 'res.users', 'read', 
-                    [repair_order[0]['user_id'][0]], {'fields': ['name']})
-                if user_data:
-                    user_info = user_data[0]['name']
-
-            if current_state == 'done':
-                models.execute_kw(db, uid, password, 'repair.order', 'write', 
-                    [[repair_order_id], {'state': 'handover'}])
-                return {
-                    'status': 'success',
-                    'message': f"✅ Estado de la orden actualizado a Entregado: {number}"
-                }
-            else:
-                estado_info = estados.get(current_state, ('❓', current_state))
-                icon, estado_nombre = estado_info
-                
-                # Construir mensaje con íconos
-                mensaje = (
-                    f"{icon} Estado actual: {estado_nombre}\n"
-                    f"\n"
-                    f"👤 Técnico: {user_info}\n"
-                    f"\n"
-                    "⚠️ La orden debe estar en estado 'Reparado' para poder ser entregada."
-                )
-
-                return {
-                    'status': 'error',
-                    'message': mensaje
-                }
-
-        except Exception as e:
-            _logger.error(f"Error en onchanger_repair_state: {str(e)}")
+        else:
+            # Enviar respuesta indicando el estado actual y que debe estar en 'done' para poder ser entregado
+            estado_mensaje = 'reparado' if current_state == 'done' else 'entregado' if current_state == 'handover' else current_state
+            _logger.info(f"El estado actual de la orden de reparación es {estado_mensaje}. Debe estar en 'Reparado' para poder ser entregado.")
             return {
                 'status': 'error',
-                'message': "❌ Error al procesar la solicitud. Contacte al administrador."
+                'message': f"El estado actual de la orden de reparación es {estado_mensaje}. Debe estar en Reparado para poder ser entregado."
             }
